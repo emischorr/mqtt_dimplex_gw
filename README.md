@@ -5,7 +5,7 @@ The project pulls data from the API every 60s and publishes it to the configured
 In the other direction the gateway service subscribes to MQTT topics and listens for commands and forwards them to the API.
 
 This requires access to the API interface over the local network. Depending on your heatpump this is maybe locked down by the firewall running on the device.
-Tested with a Dimplex System M.
+Tested with a Dimplex System M (version M1.4 of the heat pump manager and software version 5.0.6).
 
 This project is not associated with Glen Dimplex.
 
