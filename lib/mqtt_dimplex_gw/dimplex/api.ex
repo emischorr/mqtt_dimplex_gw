@@ -4,6 +4,7 @@ defmodule MqttDimplexGw.Dimplex.API do
   """
   use Tesla
 
+  alias MqttDimplexGw.Dimplex.API.Host
   alias MqttDimplexGw.Dimplex.Mapping
 
   import Mapping
@@ -19,11 +20,22 @@ defmodule MqttDimplexGw.Dimplex.API do
     {:statistics, "WAERMEMENGEN"}
   ]
 
+  defmodule Host do
+    @callback base_url() :: String.t()
+  end
+
+  defmodule ProdHost do
+    @behaviour Host
+    def base_url, do: "http://#{Application.get_env(:mqtt_dimplex_gw, :dimplex)[:host]}/api"
+  end
+
+
   for {name, group} <- @groups do
     def unquote(name)() do
-      case get("#{base_url()}/functiondata/group/#{unquote(group)}") do
+      case get("#{host().base_url()}/functiondata/group/#{unquote(group)}") do
         {:ok, %Tesla.Env{:body => body}} when is_map(body) or is_list(body) ->
           {:ok, body
+            |> List.flatten()
             |> Enum.map(&( %{key: &1["key"], value: &1["value"]} ))
             |> Enum.map(&mappings/1)
           }
@@ -38,14 +50,14 @@ defmodule MqttDimplexGw.Dimplex.API do
   def groups(group_list) do
     group_query = group_list|> Enum.join(",")
 
-    case get("#{base_url()}/functiondata/groups?groups=#{group_query}") do
+    case get("#{host().base_url()}/functiondata/groups?groups=#{group_query}") do
       {:ok, %Tesla.Env{:body => body}} when is_map(body) or is_list(body) ->
         {:ok, body
           |> Map.values()
           |> List.flatten()
           |> Enum.map(&( %{key: &1["key"], value: &1["value"]} ))
           |> Enum.map(&mappings/1)
-          |> Enum.dedup()
+          |> Enum.uniq()
         }
 
       error ->
@@ -55,7 +67,7 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec status :: {:error, {:error, any}} | {:ok, list}
   def status do
-    case get("#{base_url()}/system/status") do
+    case get("#{host().base_url()}/system/status") do
       {:ok, %Tesla.Env{:body => body}} when is_map(body) -> {:ok, body}
       error -> {:error, error}
     end
@@ -63,7 +75,7 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec operation_modes :: {:error, {:error, any}} | {:ok, list}
   def operation_modes do
-    case get("#{base_url()}/operationmode/list") do
+    case get("#{host().base_url()}/operationmode/list") do
       {:ok, %Tesla.Env{:body => body}} when is_list(body) ->
         {:ok, Enum.map(body, &( %{&1["id"] => &1["name"]} ))}
 
@@ -74,7 +86,7 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec operation_mode :: {:error, {:error, any}} | {:ok, any}
   def operation_mode do
-    case get("#{base_url()}/operationmode") do
+    case get("#{host().base_url()}/operationmode") do
       {:ok, %Tesla.Env{:body => body}} -> {:ok, body}
       error -> {:error, error}
     end
@@ -82,7 +94,7 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec operation_mode(integer) :: {:error, {:error, any}} | {:ok, any}
   def operation_mode(mode) when is_integer(mode) do
-    case put("#{base_url()}/operationmode", %{id: mode}) do
+    case put("#{host().base_url()}/operationmode", %{id: mode}) do
       {:ok, %Tesla.Env{:body => body}} -> {:ok, body}
       error -> {:error, error}
     end
@@ -90,7 +102,7 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec ww_temp :: {:error, {:error, any}} | {:ok, any}
   def ww_temp do
-    case get("#{base_url()}/heatingunit/WW/temperature") do
+    case get("#{host().base_url()}/heatingunit/WW/temperature") do
       {:ok, %Tesla.Env{:body => body}} -> {:ok, body}
       error -> {:error, error}
     end
@@ -101,7 +113,7 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec ww_temp(String.t()) :: {:error, {:error, any}} | {:ok, any}
   def ww_temp(temp) when is_binary(temp) do
-    case put("#{base_url()}/heatingunit/WW/temperature", %{target: temp}) do
+    case put("#{host().base_url()}/heatingunit/WW/temperature", %{target: temp}) do
       {:ok, %Tesla.Env{:body => body}} -> {:ok, body}
       error -> {:error, error}
     end
@@ -109,7 +121,7 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec heating :: {:error, {:error, any}} | {:ok, any}
   def heating do
-    case get("#{base_url()}/heatingunit/HK1/temperature") do
+    case get("#{host().base_url()}/heatingunit/HK1/temperature") do
       {:ok, %Tesla.Env{:body => body}} -> {:ok, body}
       error -> {:error, error}
     end
@@ -120,13 +132,11 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec heating_offset(String.t()) :: {:error, {:error, any}} | {:ok, any}
   def heating_offset(offset) when is_binary(offset) do
-    case put("#{base_url()}/heatingunit/HK1/temperature", %{target: offset}) do
+    case put("#{host().base_url()}/heatingunit/HK1/temperature", %{target: offset}) do
       {:ok, %Tesla.Env{:body => body}} -> {:ok, body}
       error -> {:error, error}
     end
   end
 
-  defp base_url do
-    "http://#{Application.get_env(:mqtt_dimplex_gw, :dimplex)[:host]}/api"
-  end
+  defp host, do: Application.get_env(:mqtt_dimplex_gw, :dimplex_host_impl, ProdHost)
 end

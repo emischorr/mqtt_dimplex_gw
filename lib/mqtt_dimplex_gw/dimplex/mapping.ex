@@ -20,5 +20,5 @@ defmodule MqttDimplexGw.Dimplex.Mapping do
   def status_name(0.4), do: "warmwater"
   def status_name(0.5), do: "cooling"
   def status_name(3), do: "locked"
-  def status_name(_code), do: "Unknown"
+  def status_name(_code), do: "unknown"
 end
