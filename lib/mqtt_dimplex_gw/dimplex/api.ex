@@ -9,7 +9,7 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   import Mapping
 
-  plug Tesla.Middleware.JSON
+  plug(Tesla.Middleware.JSON)
 
   @groups [
     {:inputs, "INPUTS"},
@@ -29,16 +29,15 @@ defmodule MqttDimplexGw.Dimplex.API do
     def base_url, do: "http://#{Application.get_env(:mqtt_dimplex_gw, :dimplex)[:host]}/api"
   end
 
-
   for {name, group} <- @groups do
     def unquote(name)() do
       case get("#{host().base_url()}/functiondata/group/#{unquote(group)}") do
         {:ok, %Tesla.Env{:body => body}} when is_map(body) or is_list(body) ->
-          {:ok, body
-            |> List.flatten()
-            |> Enum.map(&( %{key: &1["key"], value: &1["value"]} ))
-            |> Enum.map(&mappings/1)
-          }
+          {:ok,
+           body
+           |> List.flatten()
+           |> Enum.map(&%{key: &1["key"], value: &1["value"]})
+           |> Enum.map(&mappings/1)}
 
         error ->
           {:error, error}
@@ -48,17 +47,17 @@ defmodule MqttDimplexGw.Dimplex.API do
 
   @spec groups(list(String.t())) :: {:error, {:error, any}} | {:ok, list}
   def groups(group_list) do
-    group_query = group_list|> Enum.join(",")
+    group_query = group_list |> Enum.join(",")
 
     case get("#{host().base_url()}/functiondata/groups?groups=#{group_query}") do
       {:ok, %Tesla.Env{:body => body}} when is_map(body) or is_list(body) ->
-        {:ok, body
-          |> Map.values()
-          |> List.flatten()
-          |> Enum.map(&( %{key: &1["key"], value: &1["value"]} ))
-          |> Enum.map(&mappings/1)
-          |> Enum.uniq()
-        }
+        {:ok,
+         body
+         |> Map.values()
+         |> List.flatten()
+         |> Enum.map(&%{key: &1["key"], value: &1["value"]})
+         |> Enum.map(&mappings/1)
+         |> Enum.uniq()}
 
       error ->
         {:error, error}
@@ -77,7 +76,7 @@ defmodule MqttDimplexGw.Dimplex.API do
   def operation_modes do
     case get("#{host().base_url()}/operationmode/list") do
       {:ok, %Tesla.Env{:body => body}} when is_list(body) ->
-        {:ok, Enum.map(body, &( %{&1["id"] => &1["name"]} ))}
+        {:ok, Enum.map(body, &%{&1["id"] => &1["name"]})}
 
       error ->
         {:error, error}
@@ -92,6 +91,10 @@ defmodule MqttDimplexGw.Dimplex.API do
     end
   end
 
+  @doc """
+  0 - summer
+  1 - winter
+  """
   @spec operation_mode(integer) :: {:error, {:error, any}} | {:ok, any}
   def operation_mode(mode) when is_integer(mode) do
     case put("#{host().base_url()}/operationmode", %{id: mode}) do

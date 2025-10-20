@@ -24,3 +24,5 @@ mqtt_dimplex_gw-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+.enrvrc
