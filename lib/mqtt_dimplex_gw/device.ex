@@ -1,6 +1,7 @@
 defmodule MqttDimplexGw.Device do
   use GenServer
 
+  require Logger
   alias MqttDimplexGw.Mqtt
   alias MqttDimplexGw.Dimplex
 
@@ -13,7 +14,6 @@ defmodule MqttDimplexGw.Device do
   def refresh do
     GenServer.call(__MODULE__, :refresh)
   end
-
 
   # Server
 
@@ -43,10 +43,14 @@ defmodule MqttDimplexGw.Device do
   defp update(%{mqtt_client_id: client_id, config: config}) do
     with {:ok, values} <- Dimplex.groups(config[:query_groups]) do
       values
-      |> Enum.filter(&( &1.key in config[:filter_keys] ))
+      |> Enum.filter(&(&1.key in config[:filter_keys]))
       |> Enum.map(fn %{key: key, value: value} ->
         Mqtt.publish(client_id, key, value)
       end)
+    else
+      {:error, {:error, %Mint.TransportError{reason: reason}}} ->
+        Logger.warning("Error fetching groups endpoint: #{inspect(reason)}")
+        # TODO: sent mqtt status update
     end
   end
 end
