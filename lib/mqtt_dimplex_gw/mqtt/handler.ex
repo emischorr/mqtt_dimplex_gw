@@ -40,7 +40,10 @@ defmodule MqttDimplexGw.Mqtt.Handler do
         Device.refresh()
 
       {"operation_mode", mode} ->
-        Dimplex.operation_mode(mode)
+        mode
+        |> String.to_integer()
+        |> Dimplex.operation_mode()
+
         Device.refresh()
 
       {key, payload} ->
