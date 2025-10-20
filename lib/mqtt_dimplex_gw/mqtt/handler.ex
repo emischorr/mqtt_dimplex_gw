@@ -28,43 +28,53 @@ defmodule MqttDimplexGw.Mqtt.Handler do
     {:ok, state}
   end
 
-  #  topic filter room/+/temp
+  #  example topic home/set/dimplex_gw/warmwater_target_temp
   def handle_message(topic, payload, state) do
     case {List.last(topic), payload} do
       {"warmwater_target_temp", temp} ->
         Dimplex.ww_temp(temp)
         Device.refresh()
+
       {"heating_offset", offset} ->
         Dimplex.heating_offset(offset)
         Device.refresh()
+
+      {"operation_mode", mode} ->
+        Dimplex.operation_mode(mode)
+        Device.refresh()
+
       {key, payload} ->
         Logger.warning("Setting #{key} is not supported for payload: #{payload}")
     end
+
     {:ok, state}
   end
 
   def subscription(:up, topic, state) do
-    Logger.info("Subscribed to #{inspect topic}")
+    Logger.info("Subscribed to #{inspect(topic)}")
     {:ok, state}
   end
 
   def subscription({:warn, [requested: req, accepted: qos]}, topic, state) do
-    Logger.warning("Subscribed to #{inspect topic}; requested #{req} but got accepted with QoS #{qos}")
+    Logger.warning(
+      "Subscribed to #{inspect(topic)}; requested #{req} but got accepted with QoS #{qos}"
+    )
+
     {:ok, state}
   end
 
   def subscription({:error, reason}, topic, state) do
-    Logger.error("Error subscribing to #{inspect topic}; #{inspect reason}")
+    Logger.error("Error subscribing to #{inspect(topic)}; #{inspect(reason)}")
     {:ok, state}
   end
 
   def subscription(:down, topic, state) do
-    Logger.info("Unsubscribed from #{inspect topic}")
+    Logger.info("Unsubscribed from #{inspect(topic)}")
     {:ok, state}
   end
 
   def terminate(reason, _state) do
-    Logger.warning("Client has been terminated with reason: #{inspect reason}")
+    Logger.warning("Client has been terminated with reason: #{inspect(reason)}")
     :ok
   end
 end

@@ -7,12 +7,15 @@ defmodule MqttDimplexGw.Dimplex do
   @spec status :: {:error, {:error, any}} | {:ok, list}
   defdelegate status, to: API
 
-  @spec ww_temp(integer) :: {:error, {:error, any}} | {:ok, any}
+  @spec ww_temp(temp :: integer()) :: {:error, {:error, any}} | {:ok, any}
   defdelegate ww_temp(temp), to: API
 
   @spec heating :: {:error, {:error, any}} | {:ok, any}
   defdelegate heating, to: API
 
-  @spec heating_offset(integer) :: {:error, {:error, any}} | {:ok, any}
+  @spec heating_offset(offset :: integer()) :: {:error, {:error, any}} | {:ok, any}
   defdelegate heating_offset(offset), to: API
+
+  @spec operation_mode(mode :: integer()) :: {:error, {:error, any}} | {:ok, any}
+  defdelegate operation_mode(mode), to: API
 end
