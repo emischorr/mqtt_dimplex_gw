@@ -1,5 +1,5 @@
 # build with: docker build -t emischorr/mqtt_dimplex_gw:latest .
-#  or on mac: docker buildx build --platform=linux/amd64 --no-cache -t emischorr/mqtt_dimplex_gw:latest -t emischorr/mqtt_dimplex_gw:0.2.0 .
+#  or on mac: docker buildx build --platform=linux/amd64 --no-cache -t emischorr/mqtt_dimplex_gw:latest -t emischorr/mqtt_dimplex_gw:0.2.2 .
 # run with: docker run -d --rm -e MQTT_HOST=$MQTT_HOST -e MQTT_USER=$MQTT_USER -e MQTT_PW=$MQTT_PW -e DIMPLEX_HOST=$DIMPLEX_HOST emischorr/mqtt_dimplex_gw:latest start
 # push with: docker push emischorr/mqtt_dimplex_gw:latest
 

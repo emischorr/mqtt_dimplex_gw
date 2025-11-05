@@ -36,7 +36,10 @@ defmodule MqttDimplexGw.Mqtt.Handler do
         Device.refresh()
 
       {"heating_offset", offset} ->
-        Dimplex.heating_offset(offset)
+        offset
+        |> String.to_integer()
+        |> Dimplex.heating_offset()
+
         Device.refresh()
 
       {"operation_mode", mode} ->
